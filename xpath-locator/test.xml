@@ -1,0 +1,8 @@
+<?xml version='1.0'?>
+
+<foo xmlns:mml="http://www.w3.org/1998/Math/MathML" >
+<mml:math>n</mml:math>
+你好<bar>Hello</bar>
+&lt;<lt>Hello</lt>
+&#x0A;<ncr xmlns:foo="http://chrismaloney.com/">Hello</ncr>
+</foo>
