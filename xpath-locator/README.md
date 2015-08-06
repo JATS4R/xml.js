@@ -42,21 +42,50 @@ gcc `xml2-config --cflags --libs` -o xpath_locator xpath_locator.c
 Test:
 
 ```
-./xpath_locator '/foo[1]/bar[1]' '/foo[2]/bar[2]'
+./xpath_locator '/article[1]/front[1]/article-meta[1]/permissions[1]/copyright-year[1]' \
+  '/article[1]/body[1]/p[2]/*:math[namespace-uri()='"'"'http://www.w3.org/1998/Math/MathML'"'"'][1]' \
+  '/article[1]/body[1]/sec[2]/p[2]'
 ```
 
 
 # To do
 
 * ✓Allocate storage for the array of XPathFinders
-* (✓)For each xpath expression passed in:
+* ✓For each xpath expression passed in:
   * ✓strcpy, and save the original
   * ✓Count how many segments
   * ✓Allocation storage for each of the XPathSegFinder
   * ✓Split it on '/'
-  * (✓)For each segment:
-      * ✓strcpy, and save the original
-      * extract and save the element_local_name
-      * extract and save the namespace_uri, if there is one
-      * extract and save the position
+  * ✓For each segment:
+    * ✓strcpy, and save the original
+    * ✓extract and save the local_name
+    * ✓extract and save the namespace_uri, if there is one
+    * ✓extract and save the position
+
+* ✓For each xpath_locator, set:
+  * locator_level = 0
+  * count = 0
+  * line_number = 0  /* means not found yet */
+  * col_number
+
+
+* Initialize the sax parser
+  * Set level = 0
+
+* begin element handler:
+  * For each xpath:
+    * If it hasn't been found yet:
+      * if locator_level is the same as parser level:
+        * if the element wanted at path_finder->current_level is the same as this one:
+          * increment count
+          * if count == position:
+            * if this is the last segment, then record this one as found
+            * else increment path_finder->current_level
+  * level++
+
+* end element handler:
+  * level--
+
+
+
 

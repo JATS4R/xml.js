@@ -1,8 +1,51 @@
-<?xml version='1.0'?>
-
-<foo xmlns:mml="http://www.w3.org/1998/Math/MathML" >
-<mml:math>n</mml:math>
-你好<bar>Hello</bar>
-&lt;<lt>Hello</lt>
-&#x0A;<ncr xmlns:foo="http://chrismaloney.com/">Hello</ncr>
-</foo>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article 
+  PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.0 20120330//EN"
+  "JATS-journalpublishing1.dtd">
+  
+<article dtd-version="1.0"  
+         xmlns:mml='http://www.w3.org/1998/Math/MathML'
+         xmlns:xlink='http://www.w3.org/1999/xlink'>
+  <front>
+    <journal-meta>
+      <journal-id></journal-id>
+      <issn></issn>
+    </journal-meta>
+    <article-meta>
+      <title-group>
+        <article-title>Archival DTD Test Article</article-title>
+        <subtitle>(Just a small one for parsing)</subtitle>
+      </title-group>
+      <pub-date>
+        <year>2015</year>
+      </pub-date>
+      <permissions>
+        <copyright-year>2004</copyright-year>
+      </permissions>
+    </article-meta>
+  </front>
+  <body>
+    <p>你好<sub>3</sub></p>
+    <p>Formula: 
+      <mml:math display="inline">
+        <mml:mrow>
+          <mml:mn mathvariant="normal">5</mml:mn>
+          <mml:mo>:</mml:mo>
+          <mml:mn mathvariant="normal">1</mml:mn>
+        </mml:mrow>
+      </mml:math>
+    </p>
+    <sec>
+      <title>Section 1</title>
+    </sec>
+    <sec>
+      <title>Section 2</title>
+      <p>para 2.1</p>
+      <p>para 2.2</p>
+      <p>para 2.3</p>
+    </sec>
+    <sec>
+      <title>Section 3</title>
+    </sec>
+  </body>
+</article>
