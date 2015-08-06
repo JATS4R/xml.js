@@ -39,15 +39,15 @@ Build xpath_locator with:
 gcc `xml2-config --cflags --libs` -o xpath_locator xpath_locator.c
 ```
 
-Test:
+Test with the following. The first four should find a match, the fifth, not.
 
 ```
 ./xpath_locator \
-  '/article[1]/front[1]/article-meta[1]/permissions[1]/copyright-year[1]' \
+  '/article[1]/front[1]/article-meta[1]/permissions[1]/copyright-你好[1]' \
   '/article[1]/body[1]/p[2]/*:math[namespace-uri()='"'"'http://www.w3.org/1998/Math/MathML'"'"'][1]' \
-  '/article[1]/body[1]/sec[2]/p[2]'
+  '/article[1]/body[1]/sec[2]/p[2]' \
+  '/article[1]/body[1]/p[1]/sub[1]' \
+  '/article[1]/body[1]/p[1]/sub[1]/em[1]'
 ```
 
-
-# To do
 

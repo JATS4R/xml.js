@@ -20,7 +20,7 @@
         <year>2015</year>
       </pub-date>
       <permissions>
-         <copyright-year>2004</copyright-year>
+         <copyright-你好>2004</copyright-你好>
       </permissions>
     </article-meta>
   </front>
@@ -41,7 +41,7 @@
     <sec>
       <title>Section 2</title>
       <p>para 2.1</p>
-      你好<p>2.2</p>
+      你好&#x2717;<p>2.2</p>
       <p>para 2.3</p>
     </sec>
     <sec>

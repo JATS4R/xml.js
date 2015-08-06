@@ -84,6 +84,21 @@ count_chars(const xmlChar* string, char ch) {
 }
 
 
+/* Error handler */
+static void
+error(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    exit(1);
+}
+
+static void
+xpath_error(int xpath_num, XPathFinder *xpath_finder, int seg_num, const char *msg) {
+    error("XPath expression #%d is in the wrong form: '%s'. %s "
+      "in segment #%d.\n", xpath_num, xpath_finder->original, msg, seg_num);
+}
+
 /* 
   This function converts every '/' that appears inside square brackets into '^'.
   This is a hack necessary because '/' is used to delimit segments, but only when
@@ -149,19 +164,23 @@ static XPathFinder *xpath_finders;
 int num_xpaths;
 static int parser_level;
 
+#ifdef DEBUG
+// Print an indented debug message
 static void
 debug_out(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char f[strlen(fmt) + parser_level * 2 + 1];
     *f = 0;
-    for (int i = 0; i < parser_level; ++i) 
-        strcat(f, "  ");
+    for (int i = 0; i < parser_level; ++i) strcat(f, "  ");
     strcat(f, fmt);
-    //vprintf(f, args);
+    vprintf(f, args);
 }
+#else
+static void
+debug_out(const char *fmt, ...) {}
+#endif
 
-// FIXME: need error checking throughout this.
 static void 
 my_startElementNs(void *ctx,
                   const xmlChar *localname,
@@ -184,32 +203,34 @@ my_startElementNs(void *ctx,
         debug_out("  Checking xpath finder #%d; line_number = %d\n", 
             xpath_num, xpath_finder->line_number);
         int xpf_level = xpath_finder->current_level;
-        if (xpath_finder->line_number == 0 &&
-            xpf_level == parser_level) 
+
+        // This shouldn't happen, but just to be sure
+        if (xpf_level >= xpath_finder->num_segs) continue;
+
+        // If this XPath hasn't been found yet, and we're at the right level
+        if (xpath_finder->line_number == 0 && xpf_level == parser_level) 
         {
             XPathSegFinder *seg_finder = &xpath_finder->seg_finders[xpf_level];
             debug_out("    Checking seg_finder[%d]\n", xpf_level);
             const xmlChar *seg_uri = seg_finder->namespace_uri;
-            if ( !xstrcmp(localname, seg_finder->local_name) ) {
-                debug_out("      local_name matches\n");
-                if ( ( (URI == NULL && seg_uri == NULL) ||
+            if ( !xstrcmp(localname, seg_finder->local_name) &&
+                 ( (URI == NULL && seg_uri == NULL) ||
                    (URI != NULL && seg_uri != NULL && !xstrcmp(URI, seg_uri)) ) ) 
-                {
-                    debug_out("      element match!\n");
-                    seg_finder->count++;
-                    if (seg_finder->count == seg_finder->position) {
-                        debug_out("      position match! parser_level = %d, "
-                            "num_segs = %d\n", parser_level, xpath_finder->num_segs);
-                        if (parser_level == xpath_finder->num_segs - 1) {
-                            // Found!
-                            int line_number = xmlSAX2GetLineNumber(ctx);
-                            debug_out("      line_number <- %d\n", line_number);
-                            xpath_finder->line_number = line_number;
-                            xpath_finder->column_number = xmlSAX2GetColumnNumber(ctx);
-                        }
-                        else {
-                            xpath_finder->current_level++;
-                        }
+            {
+                debug_out("      element match!\n");
+                seg_finder->count++;
+                if (seg_finder->count == seg_finder->position) {
+                    debug_out("      position match! parser_level = %d, "
+                        "num_segs = %d\n", parser_level, xpath_finder->num_segs);
+                    if (parser_level == xpath_finder->num_segs - 1) {
+                        // Found!
+                        int line_number = xmlSAX2GetLineNumber(ctx);
+                        debug_out("      line_number <- %d\n", line_number);
+                        xpath_finder->line_number = line_number;
+                        xpath_finder->column_number = xmlSAX2GetColumnNumber(ctx);
+                    }
+                    else {
+                        xpath_finder->current_level++;
                     }
                 }
             }
@@ -238,30 +259,21 @@ static xmlSAXHandlerPtr handlers = &handlers_struct;
 int
 main(int argc, char **argv) {
     num_xpaths = argc - 1;
-    // printf("num_xpaths == %d\n", num_xpaths);
 
-    // printf("allocating xpath_finders: ");
     xpath_finders = (XPathFinder *) mmalloc(num_xpaths * sizeof(XPathFinder));
 
     for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
-        // FIXME: translate into xmlChars here:
         xmlChar *xpath_expr = (xmlChar *) argv[xpath_num + 1];
         XPathFinder *xpath_finder = &xpath_finders[xpath_num];
-        // printf("Initializing xpath_finder at 0x%lx\n", (unsigned long) xpath_finder);
+        xpath_finder->original = new_string(xpath_expr);
         xpath_finder->current_level = 0;
         xpath_finder->line_number = 0;
         xpath_finder->column_number = 0;
 
-        // printf("allocating xpath_finder->original: ");
-        xpath_finder->original = new_string(xpath_expr);
 
-        // printf("Got xpath expression '%s'\n", xpath_finder->original);
         escape_uri_slashes(xpath_expr, TRUE);
-        // printf("After escaping:      '%s'\n", xpath_expr);
         int num_segs = xpath_finder->num_segs = count_chars(xpath_expr, '/');
-        // printf("num_segs = %d\n", num_segs);
 
-        // printf("allocating seg_finders: ");
         XPathSegFinder *seg_finders = 
             (XPathSegFinder *) mmalloc(num_segs * sizeof(XPathSegFinder));
         xpath_finder->seg_finders = seg_finders;
@@ -273,28 +285,28 @@ main(int argc, char **argv) {
             XPathSegFinder *seg_finder = &seg_finders[seg_num];
             seg_finder->count = 0;
 
-
-            // printf("initializing seg_finder at 0x%lx\n", (unsigned long) seg_finder);
-            // printf("allocating seg_finder->original: ");
             escape_uri_slashes(seg, FALSE);
             seg_finder->original = new_string(seg);
-
-            // printf("  Segment '%s'\n", seg_finder->original);
 
             // Get the element local name
             xmlChar *lns = starts_with(seg, (const xmlChar *) "*:") ? seg + 2 : seg;
             const xmlChar *bracket = xstrchr(seg, '[');
+            if (!bracket) 
+                xpath_error(xpath_num, xpath_finder, seg_num, "No bracket found");
             int local_name_len = bracket - lns;
             xmlChar *local_name = seg_finder->local_name = 
                 new_string_n(lns, local_name_len);
-            // printf("local_name = '%s'\n", local_name);
 
             if (starts_with(bracket + 1, (const xmlChar *) "namespace-uri()=")) {
                 const xmlChar *ns_start = bracket + 18;
                 const xmlChar *ns_end = xstrchr(ns_start, '\'');
+                if (!ns_end) 
+                    xpath_error(xpath_num, xpath_finder, seg_num, 
+                        "No end to the namespace URI");
                 seg_finder->namespace_uri = new_string_n(ns_start, ns_end - ns_start);
-                // printf("found namespace '%s'\n", seg_finder->namespace_uri);
                 bracket = xstrchr(ns_end, '[');
+                if (!bracket) 
+                    xpath_error(xpath_num, xpath_finder, seg_num, "No position found");
             }
             else {
                 seg_finder->namespace_uri = NULL;
@@ -302,12 +314,15 @@ main(int argc, char **argv) {
 
             const xmlChar *pos_start = bracket + 1;
             const xmlChar *pos_end = xstrchr(pos_start, ']');
+            if (!pos_end) 
+                xpath_error(xpath_num, xpath_finder, seg_num, "No closing bracket found");
             size_t pos_str_len = pos_end - pos_start;
             char pos_str[10];
             strncpy(pos_str, (const char *) pos_start, pos_str_len);
             pos_str[pos_str_len] = 0;
-            seg_finder->position = atoi(pos_str);
-            // printf("position: %d\n", seg_finder->position);
+            seg_finder->position = strtol(pos_str, NULL, 10);
+            if (seg_finder->position <= 0) 
+                xpath_error(xpath_num, xpath_finder, seg_num, "Bad position argument");
 
             seg = xstrtok(NULL, "/");
             seg_num++;
@@ -320,7 +335,7 @@ main(int argc, char **argv) {
     handlers->startElementNs = my_startElementNs;
     handlers->endElementNs = my_endElementNs;
 
-    parser_level = 0;
+    parser_level = 0;  // [c] parser_level is safe
     int res = xmlSAXUserParseFile(handlers, NULL, "test.xml");
 
     // Output the results
