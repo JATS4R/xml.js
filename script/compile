@@ -2,12 +2,13 @@
 
 emcc -O2 -s EMULATE_FUNCTION_POINTER_CASTS=1 \
 	--memory-init-file 0 \
-	./build/xmllint.o ./build/.libs/libxml2.a ./libz.a \
-	-o xmllint.raw.js --pre-js ./src/pre.js
+    -I./build/include -I./libxml2/include \
+	./xmllint.c ./build/.libs/libxml2.a ./libz.a \
+	-o xmltool.raw.js --pre-js ./src/pre.js
 
-sed '/\/\* XMLLINT.RAW.JS \*\// {
-	r ./xmllint.raw.js
+sed '/\/\* XMLTOOL.RAW.JS \*\// {
+	r ./xmltool.raw.js
 	d
-}' < ./src/wrapper.js > ./xmllint.js
+}' < ./src/wrapper.js > ./xmltool.js
 
-rm xmllint.raw.js
+rm xmltool.raw.js

@@ -28,19 +28,27 @@ if (!xmllint(args, files).stderr) {
 
 #### Building xmllint from source ####
 
-[Install the Emscripten SDK](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html).
+[Install the Emscripten 
+SDK](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html). When that's
+done, make sure that you `source` the *emsdk_env.sh* script, to set up your environment to
+use it.
 
 ```
-	git clone
-	git submodule init
-	git submodule update
+git clone https://github.com/JATS4R/xml.js.git
+cd xml.js
+git checkout xpath-locator
+git submodule init
+git submodule update
 
-	npm install
+npm install
+npm install -g gulp
 
-	source ../emscripten_portable/emsdk_env.sh
-
-	gulp clean
-	gulp libxml2
-	gulp compile
-	gulp test
+gulp clean
+gulp libxml2
+gulp compile
+gulp test   # currently failing with "./test/test.xml fails to validate"
 ```
+
+To test in a browser, make sure your repo is being served by an HTTP server, and open
+test/test.html in it.
+

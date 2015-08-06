@@ -2,7 +2,7 @@ var xmllint = function (args, files) {
 	var stdout = '',
 		stderr = '';
 
-	/* XMLLINT.RAW.JS */
+	/* XMLTOOL.RAW.JS */
 
 	return {
 		stdout: stdout,
