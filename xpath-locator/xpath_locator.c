@@ -27,8 +27,6 @@ struct XPathFinder_struct {
 };
 typedef struct XPathFinder_struct XPathFinder;
 
-static XPathFinder *xpath_finders;
-
 typedef int bool;
 static bool TRUE = 1;
 static bool FALSE = 0;
@@ -62,6 +60,11 @@ xstrncpy(xmlChar *dest, const xmlChar *src, size_t num) {
 static xmlChar *
 xstrtok(xmlChar *str, const char *delims) {
     return (xmlChar *) strtok((char *) str, delims);
+}
+
+static int
+xstrcmp(const xmlChar *str1, const xmlChar *str2) {
+    return strcmp((const char *) str1, (const char *) str2);
 }
 
 static int 
@@ -140,31 +143,93 @@ new_string_n(const xmlChar *src, size_t len) {
     return ns;
 }
 
+// Global variables:
 
+static XPathFinder *xpath_finders;
+int num_xpaths;
+static int parser_level;
+
+static void
+debug_out(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char f[strlen(fmt) + parser_level * 2 + 1];
+    *f = 0;
+    for (int i = 0; i < parser_level; ++i) 
+        strcat(f, "  ");
+    strcat(f, fmt);
+    //vprintf(f, args);
+}
+
+// FIXME: need error checking throughout this.
 static void 
 my_startElementNs(void *ctx,
-                       const xmlChar *localname,
-                       const xmlChar *prefix,
-                       const xmlChar *URI,
-                       int nb_namespaces,
-                       const xmlChar **namespaces,
-                       int nb_attributes,
-                       int nb_defaulted,
-                       const xmlChar **attributes) 
+                  const xmlChar *localname,
+                  const xmlChar *prefix,
+                  const xmlChar *URI,
+                  int nb_namespaces,
+                  const xmlChar **namespaces,
+                  int nb_attributes,
+                  int nb_defaulted,
+                  const xmlChar **attributes) 
 {
-    printf("start element: loc = %d:%d: localname='%s', prefix='%s', URI='%s'\n",
+    debug_out("%d:%d: start %s:%s (%s)\n",
         xmlSAX2GetLineNumber(ctx),
         xmlSAX2GetColumnNumber(ctx),
-        localname, prefix, URI);
+        prefix, localname, URI);
+
+    for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) 
+    {
+        XPathFinder *xpath_finder = &xpath_finders[xpath_num];
+        debug_out("  Checking xpath finder #%d; line_number = %d\n", 
+            xpath_num, xpath_finder->line_number);
+        int xpf_level = xpath_finder->current_level;
+        if (xpath_finder->line_number == 0 &&
+            xpf_level == parser_level) 
+        {
+            XPathSegFinder *seg_finder = &xpath_finder->seg_finders[xpf_level];
+            debug_out("    Checking seg_finder[%d]\n", xpf_level);
+            const xmlChar *seg_uri = seg_finder->namespace_uri;
+            if ( !xstrcmp(localname, seg_finder->local_name) ) {
+                debug_out("      local_name matches\n");
+                if ( ( (URI == NULL && seg_uri == NULL) ||
+                   (URI != NULL && seg_uri != NULL && !xstrcmp(URI, seg_uri)) ) ) 
+                {
+                    debug_out("      element match!\n");
+                    seg_finder->count++;
+                    if (seg_finder->count == seg_finder->position) {
+                        debug_out("      position match! parser_level = %d, "
+                            "num_segs = %d\n", parser_level, xpath_finder->num_segs);
+                        if (parser_level == xpath_finder->num_segs - 1) {
+                            // Found!
+                            int line_number = xmlSAX2GetLineNumber(ctx);
+                            debug_out("      line_number <- %d\n", line_number);
+                            xpath_finder->line_number = line_number;
+                            xpath_finder->column_number = xmlSAX2GetColumnNumber(ctx);
+                        }
+                        else {
+                            xpath_finder->current_level++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    parser_level++;
 }
 
 static void
 my_endElementNs(void *ctx,
-                         const xmlChar *localname,
-                         const xmlChar *prefix,
-                         const xmlChar *URI)
+                const xmlChar *localname,
+                const xmlChar *prefix,
+                const xmlChar *URI)
 {
-    printf("end element\n");
+    parser_level--;
+    debug_out("%d:%d: end %s:%s (%s)\n",
+        xmlSAX2GetLineNumber(ctx),
+        xmlSAX2GetColumnNumber(ctx),
+        prefix, localname, URI);
 }
 
 static xmlSAXHandler handlers_struct;
@@ -172,7 +237,7 @@ static xmlSAXHandlerPtr handlers = &handlers_struct;
 
 int
 main(int argc, char **argv) {
-    int num_xpaths = argc - 1;
+    num_xpaths = argc - 1;
     // printf("num_xpaths == %d\n", num_xpaths);
 
     // printf("allocating xpath_finders: ");
@@ -181,25 +246,25 @@ main(int argc, char **argv) {
     for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
         // FIXME: translate into xmlChars here:
         xmlChar *xpath_expr = (xmlChar *) argv[xpath_num + 1];
-        XPathFinder *path_finder = &xpath_finders[xpath_num];
-        // printf("Initializing path_finder at 0x%lx\n", (unsigned long) path_finder);
-        path_finder->current_level = 0;
-        path_finder->line_number = 0;
-        path_finder->column_number = 0;
+        XPathFinder *xpath_finder = &xpath_finders[xpath_num];
+        // printf("Initializing xpath_finder at 0x%lx\n", (unsigned long) xpath_finder);
+        xpath_finder->current_level = 0;
+        xpath_finder->line_number = 0;
+        xpath_finder->column_number = 0;
 
-        // printf("allocating path_finder->original: ");
-        path_finder->original = new_string(xpath_expr);
+        // printf("allocating xpath_finder->original: ");
+        xpath_finder->original = new_string(xpath_expr);
 
-        // printf("Got xpath expression '%s'\n", path_finder->original);
+        // printf("Got xpath expression '%s'\n", xpath_finder->original);
         escape_uri_slashes(xpath_expr, TRUE);
         // printf("After escaping:      '%s'\n", xpath_expr);
-        int num_segs = path_finder->num_segs = count_chars(xpath_expr, '/');
+        int num_segs = xpath_finder->num_segs = count_chars(xpath_expr, '/');
         // printf("num_segs = %d\n", num_segs);
 
         // printf("allocating seg_finders: ");
         XPathSegFinder *seg_finders = 
             (XPathSegFinder *) mmalloc(num_segs * sizeof(XPathSegFinder));
-        path_finder->seg_finders = seg_finders;
+        xpath_finder->seg_finders = seg_finders;
 
         /* Extract each XPath segment */
         xmlChar *seg = xstrtok(xpath_expr, "/");
@@ -255,14 +320,20 @@ main(int argc, char **argv) {
     handlers->startElementNs = my_startElementNs;
     handlers->endElementNs = my_endElementNs;
 
+    parser_level = 0;
     int res = xmlSAXUserParseFile(handlers, NULL, "test.xml");
 
+    // Output the results
+    for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
+        XPathFinder *xpath_finder = &xpath_finders[xpath_num];
+        printf("%d:%d\n", xpath_finder->line_number, xpath_finder->column_number);
+    }    
 
 
     for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
-        XPathFinder *path_finder = &xpath_finders[xpath_num];
-        int num_segs = path_finder->num_segs;
-        XPathSegFinder *seg_finders = path_finder->seg_finders;
+        XPathFinder *xpath_finder = &xpath_finders[xpath_num];
+        int num_segs = xpath_finder->num_segs;
+        XPathSegFinder *seg_finders = xpath_finder->seg_finders;
         for (int seg_num = 0; seg_num < num_segs; ++seg_num) {
             XPathSegFinder *seg_finder = &seg_finders[seg_num];
             ffree(seg_finder->original);
@@ -270,8 +341,8 @@ main(int argc, char **argv) {
             ffree(seg_finder->namespace_uri);
         }
 
-        ffree(path_finder->seg_finders);
-        ffree(path_finder->original);
+        ffree(xpath_finder->seg_finders);
+        ffree(xpath_finder->original);
     }
     ffree(xpath_finders);
 }

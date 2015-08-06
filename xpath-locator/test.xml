@@ -20,14 +20,14 @@
         <year>2015</year>
       </pub-date>
       <permissions>
-        <copyright-year>2004</copyright-year>
+         <copyright-year>2004</copyright-year>
       </permissions>
     </article-meta>
   </front>
   <body>
     <p>你好<sub>3</sub></p>
     <p>Formula: 
-      <mml:math display="inline">
+       <mml:math   display="inline">
         <mml:mrow>
           <mml:mn mathvariant="normal">5</mml:mn>
           <mml:mo>:</mml:mo>
@@ -41,7 +41,7 @@
     <sec>
       <title>Section 2</title>
       <p>para 2.1</p>
-      <p>para 2.2</p>
+      你好<p>2.2</p>
       <p>para 2.3</p>
     </sec>
     <sec>
