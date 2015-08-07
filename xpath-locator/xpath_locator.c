@@ -256,14 +256,29 @@ my_endElementNs(void *ctx,
 static xmlSAXHandler handlers_struct;
 static xmlSAXHandlerPtr handlers = &handlers_struct;
 
+
+
+#ifdef XPATH_LOCATOR_MAIN
 int
 main(int argc, char **argv) {
-    num_xpaths = argc - 1;
+#else
+int
+xpath_locator(int argc, char **argv) {
+#endif
+
+    if (argc < 2) {
+        fprintf(stderr, "Need to specify an input filename.\n"
+            "Usage: xpath_locator file.xml xpath1 xpath2 ...\n");
+        exit(1);
+    }
+    char *xml_filename = argv[1];
+
+    num_xpaths = argc - 2;
 
     xpath_finders = (XPathFinder *) mmalloc(num_xpaths * sizeof(XPathFinder));
 
     for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
-        xmlChar *xpath_expr = (xmlChar *) argv[xpath_num + 1];
+        xmlChar *xpath_expr = (xmlChar *) argv[xpath_num + 2];
         XPathFinder *xpath_finder = &xpath_finders[xpath_num];
         xpath_finder->original = new_string(xpath_expr);
         xpath_finder->current_level = 0;
@@ -336,7 +351,7 @@ main(int argc, char **argv) {
     handlers->endElementNs = my_endElementNs;
 
     parser_level = 0;  // [c] parser_level is safe
-    int res = xmlSAXUserParseFile(handlers, NULL, "test.xml");
+    int res = xmlSAXUserParseFile(handlers, NULL, xml_filename);
 
     // Output the results
     for (int xpath_num = 0; xpath_num < num_xpaths; ++xpath_num) {
@@ -360,5 +375,7 @@ main(int argc, char **argv) {
         ffree(xpath_finder->original);
     }
     ffree(xpath_finders);
+
+    return 0;
 }
 

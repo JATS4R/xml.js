@@ -25,9 +25,9 @@
     </article-meta>
   </front>
   <body>
-    <p>你好<sub>3</sub></p>
+    <p><sub>3</sub></p>
     <p>Formula: 
-       <mml:math   display="inline">
+       <mml:math display="inline">
         <mml:mrow>
           <mml:mn mathvariant="normal">5</mml:mn>
           <mml:mo>:</mml:mo>

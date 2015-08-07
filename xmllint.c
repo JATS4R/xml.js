@@ -3122,8 +3122,14 @@ static void deregisterNode(xmlNodePtr node)
     nbregister--;
 }
 
+#ifdef XMLLINT_MAIN
 int
 main(int argc, char **argv) {
+#else
+int
+xmllint(int argc, char **argv) {
+#endif
+
     int i, acount;
     int files = 0;
     int version = 0;

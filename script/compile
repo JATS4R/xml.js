@@ -3,7 +3,8 @@
 emcc -O2 -s EMULATE_FUNCTION_POINTER_CASTS=1 \
 	--memory-init-file 0 \
     -I./build/include -I./libxml2/include \
-	./xmllint.c ./build/.libs/libxml2.a ./libz.a \
+	./xmltool.c ./xmllint.c xpath-locator/xpath_locator.c \
+    ./build/.libs/libxml2.a ./libz.a \
 	-o xmltool.raw.js --pre-js ./src/pre.js
 
 sed '/\/\* XMLTOOL.RAW.JS \*\// {
