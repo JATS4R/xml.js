@@ -1,4 +1,4 @@
-var xmllint = function (args, files) {
+var xmltool = function (args, files) {
 	var stdout = '',
 		stderr = '';
 
