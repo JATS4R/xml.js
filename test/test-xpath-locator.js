@@ -1,4 +1,4 @@
-var test_xml = '../xpath-locator/test.xml';
+var test_xml = 'test-xpath-locator.xml';
 
 var statusNode = document.querySelector('#status');
 
