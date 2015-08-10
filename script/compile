@@ -2,14 +2,14 @@
 
 emcc -O2 -s EMULATE_FUNCTION_POINTER_CASTS=1 \
 	--memory-init-file 0 \
-    -I./build/include -I./libxml2/include \
-	./xmltool.c ./xmllint.c xpath-locator/xpath_locator.c \
-    ./build/.libs/libxml2.a ./libz.a \
-	-o xmltool.raw.js --pre-js ./src/pre.js
+    -Ibuild/include -Ilibxml2/include \
+	src/xmltool.c src/xmllint.c src/xpath_locator.c \
+    build/.libs/libxml2.a ./libz.a \
+	-o xmltool.raw.js --pre-js src/pre.js
 
 sed '/\/\* XMLTOOL.RAW.JS \*\// {
 	r ./xmltool.raw.js
 	d
-}' < ./src/wrapper.js > ./xmltool.js
+}' < src/wrapper.js > xmltool.js
 
 rm xmltool.raw.js

@@ -161,7 +161,7 @@ make install
 To set your environment to use this, add the install/bin directory to the front of your PATH.
 Then, confirm with `which xml2-config`.
 
-Next, change to the xpath_locator project directory, and build xpath_locator as a 
+Next, change to the *src* project directory, and build xpath_locator as a 
 stand-alone program, with:
 
 ```
