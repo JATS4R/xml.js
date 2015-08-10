@@ -1,25 +1,11 @@
-var xmllint = {}
-;
-
-xmllint.validateXML = function (options) {
-	var Module = {
-		xml: options.xml,
-		schema: options.schema
-	}
-	;
+var xmllint = function (args, files) {
+	var stdout = '',
+		stderr = '';
 
 	/* XMLLINT.RAW.JS */
 
-	Module['return'] = Module['return'].split('\n').slice(0,-2);
-
-	// Do this in a JSLint style way...
 	return {
-		errors: Module['return'].length ? Module['return'] : null
+		stdout: stdout,
+		stderr: stderr,
 	};
-}
-
-if ("undefined" === typeof window) {
-	if ("undefined" !== typeof module) {
-		module.exports = xmllint;
-	}
 }
