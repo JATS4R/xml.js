@@ -31,9 +31,7 @@ var xmltool = function (args, files) {
   var stderr = '';
   var stderr_converter = make_utf8_converter();
 
-
-
-  /* XMLLINT.RAW.JS */
+  /* XMLTOOL.RAW.JS */
 
   return {
     stdout: stdout,
