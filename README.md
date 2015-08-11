@@ -98,19 +98,18 @@ code in two separate JavaScript libraries, we created one main module, in
 xmltool.c, that delegates to either xmllint.c or to
 xpath_locator.c, depending on the first command-line option. 
 
-Also, to allow xmllint to be called as a subroutine, it was necessary to change the
-name of its `main` function to something else. Rather than hack the libxml2 version 
-of xmllint, we copied it out of
+To allow xmllint to be called as a subroutine to something else. 
+Rather than hack the libxml2 version of xmllint, we copied it out of
 libxml2, and changed it in the copy.
 
 The output of all this is a JavaScript library, xmltool.js, which works as follows:
 
-* If the very first command line argument is `xpath_locator`, then it is stripped
-  out, and the xpath_locator function is called with the rest of the arguments
+* If the very first command line argument is `--xpath-locator`, then it is stripped
+  out, and the `xpath_locator` function is called with the rest of the arguments
 * Otherwise, `xmllint` is called.
 
 
-## Building from source
+# Building from source
 
 [Install the Emscripten 
 SDK](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html). 

@@ -1,4 +1,12 @@
 var test_xml = 'test-xpath-locator.xml';
+var test_xpaths = [
+  '/article[1]/front[1]/article-meta[1]/permissions[1]/copyright-你好[1]',
+  '/article[1]/body[1]/p[2]/*:math[namespace-uri()=\'http://www.w3.org' +
+    '/1998/Math/MathML\'][1]',
+  '/article[1]/body[1]/sec[2]/p[2]',
+  '/article[1]/body[1]/p[1]/sub[1]',
+  '/article[1]/body[1]/p[1]/sub[1]/em[1]'
+];
 
 var statusNode = document.querySelector('#status');
 
@@ -10,13 +18,9 @@ fetch(test_xml)
 
     statusNode.textContent = 'Locating XPaths…';
 
-    var args = ['--xpath-locator', 'dummy.xml', 
-      '/article[1]/front[1]/article-meta[1]/permissions[1]/copyright-你好[1]',
-      '/article[1]/body[1]/p[2]/*:math[namespace-uri()=\'http://www.w3.org' +
-        '/1998/Math/MathML\'][1]',
-      '/article[1]/body[1]/sec[2]/p[2]',
-      '/article[1]/body[1]/p[1]/sub[1]',
-      '/article[1]/body[1]/p[1]/sub[1]/em[1]'];
+    var args = ['--xpath-locator', 'dummy.xml'];
+    args = args.concat(test_xpaths);
+    console.log("args = " + args);
 
     files = [{
         path: 'dummy.xml',
@@ -32,6 +36,7 @@ fetch(test_xml)
     else {
         statusNode.textContent = 
           'Done! Locations are marked in the document below with "v"s.';
+        console.log("output.stdout = " + output.stdout);
 
         var loc_lines = output.stdout.split("\n");
         loc_lines.pop();
@@ -59,6 +64,7 @@ fetch(test_xml)
             }
         })
 
+        document.getElementById('xpaths').textContent = test_xpaths.join("\n");
         document.getElementById('xml').textContent = lines.join("\n");
     }
   });
