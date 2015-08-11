@@ -12,13 +12,17 @@ var Module = {
 			}
 
 			// create the file
-			FS.createDataFile('/', file.path, Module['intArrayFromString'](file.data), true, true);
+			FS.createDataFile('/', file.path, 
+        Module['intArrayFromString'](file.data), true, true);
 		});
 	},
-	stdout: function (code) {
-		stdout += String.fromCharCode(code);
-	},
+
+  // This function converts the UTF-8 byte stream to a string
+  stdout: function(code) {
+    stdout += stdout_converter(code);
+  },
+
 	stderr: function (code) {
-		stderr += String.fromCharCode(code);
+    stderr += stderr_converter(code);
 	}
 };
