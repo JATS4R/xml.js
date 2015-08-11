@@ -135,7 +135,10 @@ gulp test     # currently failing with "./test/test.xml fails to validate"
 To test in a browser, make sure your repo is being served by an HTTP server, and open
 up the following files in a browser:
 
-* test/test-xmllint.html
+* test/test-xmllint.html - verify that:
+    * The file validates ("Valid!" should appear after a short delay)
+    * In the first `<journal-id>`, the name should appear as "你好PeerJ" -- this tests
+      that UTF-8 output serialization works correctly
 * test/test-xpath-locator.html
 
 
