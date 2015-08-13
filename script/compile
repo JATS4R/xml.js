@@ -2,6 +2,7 @@
 
 emcc -O2 -s EMULATE_FUNCTION_POINTER_CASTS=1 \
 	--memory-init-file 0 \
+    -s ALLOW_MEMORY_GROWTH=1 \
     -Ibuild/include -Ilibxml2/include \
 	src/xmltool.c src/xmllint.c src/xpath_locator.c \
     build/.libs/libxml2.a ./libz.a \
