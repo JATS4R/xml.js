@@ -117,11 +117,8 @@ When that's done, make sure that you `source` the *emsdk_env.sh* script, to set 
 your environment to use it.
 
 ```
-git clone https://github.com/JATS4R/xml.js.git
+git clone --recursive https://github.com/JATS4R/xml.js.git
 cd xml.js
-git checkout xpath-locator
-git submodule init
-git submodule update
 
 npm install
 npm install -g gulp
